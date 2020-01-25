@@ -22,6 +22,9 @@ def _get_ready_nodes(v1_client, filtered=True):
     ready_nodes = []
     try:
         for n in v1_client.list_node().items:
+            if n.metadata.labels.get("noCustomScheduler") == "yes":
+                logger.info(f"Skipping Node {n.metadata.name} since it has noCustomScheduler label")
+                continue
             if filtered:
                 if not n.spec.unschedulable:
                     no_schedule_taint = False
@@ -50,6 +53,8 @@ def _get_ready_nodes(v1_client, filtered=True):
 
 def _get_schedulable_node(v1_client):
     node_list = _get_ready_nodes(v1_client)
+    if not node_list:
+        return None
     available_nodes = list(set(node_list))
     return random.choice(available_nodes)
 
@@ -87,6 +92,8 @@ def watch_pod_events():
                                             pod_namespace, pod_name, node_name, service_name)
                                 res = schedule_pod(V1_CLIENT, pod_name, node_name, pod_namespace)
                                 logger.info("Response %s ", res)
+                            else:
+                                logger.error(f"Found no valid node to schedule {pod_name} in {pod_namespace}")
                         except ApiException as e:
                             logger.error(json_loads(e.body)["message"])
                         except ValueError as e:
