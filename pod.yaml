@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: annotation-second-scheduler
+  labels:
+    name: multischeduler-example
+    schedulingStrategy: meetup
+    serviceName: annotation-second-scheduler
+spec:
+  schedulerName: my-scheduler
+  containers:
+  - name: pod-with-second-annotation-container
+    image: k8s.gcr.io/pause:2.0
